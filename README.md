@@ -1,40 +1,62 @@
-# Yii2 Security Module for Golang
+# 🔒 Yii2 Security (Golang)
 
-## Overview
-This repository houses a Golang implementation of the Yii2 security module, designed to seamlessly transition PHP-based Yii2 applications to the Golang environment.
+[![Go Version](https://img.shields.io/badge/go-%3E%3D1.21-blue.svg)](https://golang.org/)
 
-## Example Usage
+Golang port of Yii2's `Security` component so Go services can decrypt, encrypt, and verify payloads produced by existing Yii2/PHP apps (and vice versa). See [Yii2 Security documentation](https://www.yiiframework.com/doc/api/2.0/yii-base-security).
+
+## ✨ Features
+- Yii2-compatible `encryptByKey` / `decryptByKey`.
+- Yii2-compatible `encryptByPassword` / `decryptByPassword`.
+- Password hashing/validation compatible with Yii2 `generatePasswordHash()` and `validatePassword()`.
+
+## 📋 Requirements
+- Go 1.21+
+
+## 🚀 Install
+
+```bash
+go get github.com/dwiprawira/go-yii2security/yii2security
+```
+
+## 💻 Usage
 
 ```go
-package main
-
 import (
-	"fmt"
-	"encoding/base64"
-	"github.com/dwiprawira/go-yii2security/yii2security"
+    "encoding/base64"
+    "fmt"
+
+    "github.com/dwiprawira/go-yii2security/yii2security"
 )
 
 func main() {
-	secret := "secret"
-	data := "hello world????????!!"
+    plaintext := "hello world"
 
-	// Encrypt
-	encryptedData, _ := yii2security.Encrypt(data, secret, false)
-	
-	// Print base64 of encryptedData
-	fmt.Println(base64.StdEncoding.EncodeToString(*encryptedData))
+    // Encrypt/decrypt using a raw key (Yii2::encryptByKey / decryptByKey)
+    key := "my-secret"
+    cipherKey, _ := yii2security.Encrypt(plaintext, key, false)
+    fmt.Println("by key:", base64.StdEncoding.EncodeToString(*cipherKey))
+    plainKey, _ := yii2security.Decrypt(*cipherKey, key, false)
+    fmt.Println("decrypted (key):", plainKey)
 
-	// Decrypt
-	decrypted, _ := yii2security.Decrypt(*encryptedData, secret, false)
-	fmt.Println(decrypted)
+    // Encrypt/decrypt using a password (Yii2::encryptByPassword / decryptByPassword)
+    password := "P@ssw0rd!"
+    cipherPw, _ := yii2security.Encrypt(plaintext, password, true)
+    fmt.Println("by password:", base64.StdEncoding.EncodeToString(*cipherPw))
+    plainPw, _ := yii2security.Decrypt(*cipherPw, password, true)
+    fmt.Println("decrypted (password):", plainPw)
 
-	// Generate and Validate Password
-	passwordHash := yii2security.GeneratePasswordHash("Hello!!!")
-	fmt.Println(passwordHash)
-
-	if yii2security.ValidatePassword("Hello!!!", passwordHash) {
-		fmt.Println("password correct!!")
-	} else {
-		fmt.Println("password incorrect!!")
-	}
+    // Yii2-style password hashing
+    hash := yii2security.GeneratePasswordHash(password)
+    fmt.Println("hash:", hash)
+    fmt.Println("valid:", yii2security.ValidatePassword(password, hash))
 }
+```
+
+## 🔧 API Overview
+- `Encrypt(data, secret string, usePassword bool) (*[]byte, error)`
+  - `usePassword=false` → Yii2 `encryptByKey` (HKDF-based key derivation).
+  - `usePassword=true`  → Yii2 `encryptByPassword` (PBKDF2-based derivation).
+- `Decrypt(cipher []byte, secret string, usePassword bool) (string, error)`
+  - Matches the corresponding Yii2 decrypt functions for the chosen derivation.
+- `GeneratePasswordHash(password string) string`
+- `ValidatePassword(password, hash string) bool`
