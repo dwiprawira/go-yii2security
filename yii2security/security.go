@@ -34,7 +34,7 @@ func Encrypt(plaintext string, secret string, byPassword bool) (*[]byte, error) 
 	var err error
 
 	if byPassword {
-		key = derivePassword([]byte(secret), salt, nil)
+		key = derivePassword([]byte(secret), salt)
 	} else { // default is encryptByPassword
 		key, err = deriveKey([]byte(secret), salt, nil)
 		if err != nil {
@@ -77,7 +77,7 @@ func Decrypt(encoded []byte, secret string, byPassword bool) (string, error) {
 	var err error
 
 	if byPassword {
-		key = derivePassword([]byte(secret), salt, nil)
+		key = derivePassword([]byte(secret), salt)
 	} else { // default is encryptByPassword
 		key, err = deriveKey([]byte(secret), salt, nil)
 		if err != nil {
@@ -130,7 +130,7 @@ func deriveKey(secret []byte, salt []byte, info []byte) ([]byte, error) {
 	return key, err
 }
 
-func derivePassword(secret []byte, salt []byte, info []byte) []byte {
+func derivePassword(secret []byte, salt []byte) []byte {
 	return pbkdf2.Key(secret, salt, 100000, 16, sha256.New)
 }
 
